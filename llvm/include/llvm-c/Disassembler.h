@@ -81,6 +81,8 @@ int LLVMSetDisasmOptions(LLVMDisasmContextRef DC, uint64_t Options);
 #define LLVMDisassembler_Option_SetInstrComments 8
   /* The option to print latency information alongside instructions */
 #define LLVMDisassembler_Option_PrintLatency 16
+/* The option to print branch immediates as addresses */
+#define LLVMDisassembler_Option_PrintBranchImmAsAddress 32
 
 /**
  * Dispose of a disassembler context.

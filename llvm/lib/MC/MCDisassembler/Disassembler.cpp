@@ -271,13 +271,14 @@ size_t LLVMDisasmInstruction(LLVMDisasmContextRef DCR, uint8_t *Bytes,
     return 0;
 
   case MCDisassembler::Success: {
+    MCSubtargetInfo STI = *DC->getSubtargetInfo();
     StringRef AnnotationsStr = Annotations.str();
 
     SmallVector<char, 64> InsnStr;
     raw_svector_ostream OS(InsnStr);
     formatted_raw_ostream FormattedOS(OS);
-    IP->printInst(&Inst, PC, AnnotationsStr, *DC->getSubtargetInfo(),
-                  FormattedOS);
+    uint64_t Addr = PC + (STI.getTargetTriple().isX86() ? Size : 0);
+    IP->printInst(&Inst, Addr, AnnotationsStr, STI, FormattedOS);
 
     if (DC->getOptions() & LLVMDisassembler_Option_PrintLatency)
       emitLatency(DC, Inst);
@@ -341,6 +342,13 @@ int LLVMSetDisasmOptions(LLVMDisasmContextRef DCR, uint64_t Options){
     LLVMDisasmContext *DC = static_cast<LLVMDisasmContext *>(DCR);
     DC->addOptions(LLVMDisassembler_Option_PrintLatency);
     Options &= ~LLVMDisassembler_Option_PrintLatency;
+  }
+  if (Options & LLVMDisassembler_Option_PrintBranchImmAsAddress) {
+    LLVMDisasmContext *DC = static_cast<LLVMDisasmContext *>(DCR);
+    MCInstPrinter *IP = DC->getIP();
+    IP->setPrintBranchImmAsAddress(true);
+    DC->addOptions(LLVMDisassembler_Option_PrintBranchImmAsAddress);
+    Options &= ~LLVMDisassembler_Option_PrintBranchImmAsAddress;
   }
   return (Options == 0);
 }
